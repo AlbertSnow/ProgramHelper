@@ -11,10 +11,10 @@ char* PROGRAM_ADB_PATH = "/Users/zhaojialiang/Library/Android/sdk/platform-tools
 
 void handleChildProcessOutput(char* buffer, int count) {
     if (strncmp("Target file", buffer, 11) == 0) {
-        //     printf("-------- I got you ----- \n");
-        // }
+        printf("-------- I got you ----- \n");
+    }
 
-        // if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
+    if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
         printf("-------- Start restart your app ----- \n");
 
         pid_t pid = fork();
@@ -36,21 +36,19 @@ void handleChildProcessOutput(char* buffer, int count) {
         }
         wait(NULL);
         printf("AdbProcess: stopApp finish \n");
-        sleep(9000);
 
         pid_t startAppPid = fork();
         if (startAppPid == 0) {
             printf("StartAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
+            sleep(2);
             execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", (char*)NULL);
             perror("execl");
             exit(1);
         }
         wait(NULL);
         printf("AdbProcess: startApp finish \n");
-        sleep(3000);
-        
+
         printf("AdbProcess: end \n");
-        // exit(1);
     }
 }
 
@@ -84,10 +82,11 @@ void parentProcess(int* childInputFD, int* childOutputFD)
         else
         {
             printf("ParentPrcessOutput: %.*s \n", (int)count, buffer);
-            // handle_child_process_output(buffer, count);
-            // if (buffer ) {
-            // }
             handleChildProcessOutput(buffer, count);
+            if (strncmp("The Flutter DevTools debugger and profiler on", buffer, 25) == 0) {
+                printf("Start input R \n");
+                write(childInputFD[1], "R", 1);
+            }
         }
     }
     close(childOutputFD[0]);
