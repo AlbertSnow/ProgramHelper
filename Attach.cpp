@@ -6,8 +6,8 @@
 #include <sys/wait.h>
 #include <string.h>
 
-const char* PROGRAM_FLUTTER_PATH = "/Users/zhaojialiang/.flutter_sdk/bin/flutter";
-const char* PROGRAM_ADB_PATH = "/Users/zhaojialiang/Library/Android/sdk/platform-tools/adb";
+const char* PROGRAM_FLUTTER_PATH = "/Users/YourName/.flutter_sdk/bin/flutter";
+const char* PROGRAM_ADB_PATH = "/Users/YourName/Library/Android/sdk/platform-tools/adb";
 
 void handleChildProcessOutput(char* buffer, int count) {
     if (strncmp("Target file", buffer, 11) == 0) {
