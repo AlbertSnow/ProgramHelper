@@ -6,22 +6,25 @@
 #include <sys/wait.h>
 #include <string.h>
 
-char* PROGRAM_FLUTTER_PATH = "/Users/zhaojialiang/.flutter_sdk/bin/flutter";
-char* PROGRAM_ADB_PATH = "/Users/zhaojialiang/Library/Android/sdk/platform-tools/adb";
+const char* PROGRAM_FLUTTER_PATH = "/Users/zhaojialiang/.flutter_sdk/bin/flutter";
+const char* PROGRAM_ADB_PATH = "/Users/zhaojialiang/Library/Android/sdk/platform-tools/adb";
 
 void handleChildProcessOutput(char* buffer, int count) {
     if (strncmp("Target file", buffer, 11) == 0) {
-        printf("-------- I got you ----- \n");
+        printf("-------- Is not flutter project root directory ----- \n");
     }
 
     if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
-        printf("-------- Start restart your app ----- \n");
+        printf("-------- Start adb handle ----- \n");
 
         pid_t pid = fork();
         if (pid == 0)
         {
             printf("AdbProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
-            execl(PROGRAM_ADB_PATH, "adb", "devices", (char*)NULL);
+            // execl(PROGRAM_ADB_PATH, "adb", "devices", (char*)NULL);
+            char *programName = "adb";
+            char *args[] = {programName, "devices", NULL};
+            execvp(programName, args);
             perror("execl");
             exit(1);
         }
@@ -30,7 +33,10 @@ void handleChildProcessOutput(char* buffer, int count) {
         pid_t stopAppPid = fork();
         if (stopAppPid == 0) {
             printf("StopAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
-            execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "force-stop", "com.sankuai.meituan.meituanwaimaibusiness", (char*)NULL);
+            // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "force-stop", "com.sankuai.meituan.meituanwaimaibusiness", (char*)NULL);
+            char *programName = "adb";
+            char *args[] = {programName, "shell", "am", "force-stop", "com.sankuai.meituan.meituanwaimaibusiness", NULL};
+            execvp(programName, args);
             perror("execl");
             exit(1);
         }
@@ -41,7 +47,10 @@ void handleChildProcessOutput(char* buffer, int count) {
         if (startAppPid == 0) {
             printf("StartAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
             sleep(2);
-            execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", (char*)NULL);
+            // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", (char*)NULL);
+            char *programName = "adb";
+            char *args[] = {programName, "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", NULL};
+            execvp(programName, args);
             perror("execl");
             exit(1);
         }
@@ -55,7 +64,7 @@ void handleChildProcessOutput(char* buffer, int count) {
 void parentProcess(int* childInputFD, int* childOutputFD)
 {
     // Close the entrance of the pipe within the parent process
-    printf("I am parent, pid=%d,ppid=%d\n", getpid(), getppid());
+    printf("Parent process, pid=%d,ppid=%d\n", getpid(), getppid());
     close(childInputFD[0]);
     close(childOutputFD[1]);
 
@@ -81,7 +90,13 @@ void parentProcess(int* childInputFD, int* childOutputFD)
         }
         else
         {
-            printf("ParentPrcessOutput: %.*s \n", (int)count, buffer);
+            // printf("ParentProcessCatch: %.*s \n", (int)count, buffer);
+            if (buffer[count-1] == '\n') {
+                printf("%.*s", (int)count, buffer);
+            } else {
+                printf("%.*s \n", (int)count, buffer);
+            }
+            
             handleChildProcessOutput(buffer, count);
             if (strncmp("The Flutter DevTools debugger and profiler on", buffer, 25) == 0) {
                 printf("Start input R \n");
@@ -98,7 +113,7 @@ void childProcess(int* childInputFD, int* childOutputFD) {
     /// Close the exit from the pipe within the child process
     close(childInputFD[1]);
     close(childOutputFD[0]);
-    printf("I am child, pid=%d,ppid=%d\n", getpid(), getppid());
+    printf("Child Process, pid=%d,ppid=%d\n", getpid(), getppid());
 
     while ((dup2(childInputFD[0], STDIN_FILENO) == -1) && (errno == EINTR))
     {
@@ -114,14 +129,20 @@ void childProcess(int* childInputFD, int* childOutputFD) {
         printf("dup2 function error");
     }
 
-    printf("Change FD: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
-    execl(PROGRAM_FLUTTER_PATH, "flutter", "attach", (char*)NULL);
+    // execl(PROGRAM_FLUTTER_PATH, "flutter", "attach", (char*)NULL);
+    char *programName = "flutter";
+    char *args[] = {programName, "attach", NULL};
+    execvp(programName, args);
     perror("execl");
     _exit(1);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc == 3) {
+        printf("argc1: %s, argc2: %s", argv[0], argv[1]);
+    }
+
     int childOutputFD[2];
     if (pipe(childOutputFD) == -1)
     {
