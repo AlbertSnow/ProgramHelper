@@ -4,11 +4,12 @@
 #include <errno.h>
 #include <sys/wait.h>
 
-void parentProcess(int *filedes)
+void parentProcess(int* filedes)
 {
     // Close the entrance of the pipe within the parent process
     printf("I am parent, pid=%d,ppid=%d\n", getpid(), getppid());
     close(filedes[1]);
+
     char buffer[4096];
     while (1)
     {
@@ -31,12 +32,33 @@ void parentProcess(int *filedes)
         }
         else
         {
-            printf("Parent outpu: %s", buffer);
+            printf("Parent process output: %s \n", buffer);
             // handle_child_process_output(buffer, count);
         }
     }
     close(filedes[0]);
     wait(0);
+    // sleep(10);
+}
+
+void childProcess (int* filedes) {
+    /// Close the exit from the pipe within the child process
+    close(filedes[0]);
+    printf("I am child, pid=%d,ppid=%d\n", getpid(), getppid());
+
+    while ((dup2(filedes[1], STDOUT_FILENO) == -1) && (errno == EINTR))
+    {
+        printf("dup2 function error");
+    }
+    while ((dup2(filedes[1], STDERR_FILENO) == -1) && (errno == EINTR))
+    {
+        printf("dup2 function error");
+    }
+
+    printf("Change FD: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
+    execl("/Users/zhaojialiang/.flutter_sdk/bin/flutter", "flutter", "attach", (char*)NULL);
+    perror("execl");
+    _exit(1);
 }
 
 int main()
@@ -51,19 +73,7 @@ int main()
     pid_t pid = fork();
     if (pid == 0)
     {
-        printf("I am child, pid=%d,ppid=%d\n", getpid(), getppid());
-
-        while ((dup2(filedes[1], STDOUT_FILENO) == -1) && (errno == EINTR))
-        {
-            printf("dup2 function error");
-        }
-
-        /// Close the exit from the pipe within the child process
-        close(filedes[0]);
-
-        execl("/Users/zhaojialiang/.flutter_sdk/bin/flutter", "flutter", "attach", (char *)NULL);
-        perror("execl");
-        _exit(1);
+        childProcess(filedes);
     }
     else if (pid > 0)
     {
@@ -74,5 +84,5 @@ int main()
         perror("fork");
         exit(1);
     }
-    return 0;
+    return 1;
 }
