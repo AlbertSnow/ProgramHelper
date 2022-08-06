@@ -1,24 +1,56 @@
 #include <stdio.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <string.h>
 
+char* PROGRAM_FLUTTER_PATH = "/Users/zhaojialiang/.flutter_sdk/bin/flutter";
+char* PROGRAM_ADB_PATH = "/Users/zhaojialiang/Library/Android/sdk/platform-tools/adb";
+
 void handleChildProcessOutput(char* buffer, int count) {
     if (strncmp("Target file", buffer, 11) == 0) {
-        printf("-------- I got you ----- \n");
-    }
+        //     printf("-------- I got you ----- \n");
+        // }
 
-    if (strncmp("Waiting for a connection from", buffer, 30) == 0) {
+        // if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
+        printf("-------- Start restart your app ----- \n");
+
         pid_t pid = fork();
         if (pid == 0)
         {
-            printf("RestartProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
-            execl("/Users/zhaojialiang/MyScript/Restart", "Restart", (char*)NULL);
+            printf("AdbProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
+            execl(PROGRAM_ADB_PATH, "adb", "devices", (char*)NULL);
             perror("execl");
-            printf("RestartProcess: end");
+            exit(1);
         }
+        wait(NULL);
+
+        pid_t stopAppPid = fork();
+        if (stopAppPid == 0) {
+            printf("StopAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
+            execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "force-stop", "com.sankuai.meituan.meituanwaimaibusiness", (char*)NULL);
+            perror("execl");
+            exit(1);
+        }
+        wait(NULL);
+        printf("AdbProcess: stopApp finish \n");
+        sleep(9000);
+
+        pid_t startAppPid = fork();
+        if (startAppPid == 0) {
+            printf("StartAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
+            execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", (char*)NULL);
+            perror("execl");
+            exit(1);
+        }
+        wait(NULL);
+        printf("AdbProcess: startApp finish \n");
+        sleep(3000);
+        
+        printf("AdbProcess: end \n");
+        // exit(1);
     }
 }
 
@@ -84,7 +116,7 @@ void childProcess(int* childInputFD, int* childOutputFD) {
     }
 
     printf("Change FD: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
-    execl("/Users/zhaojialiang/.flutter_sdk/bin/flutter", "flutter", "attach", (char*)NULL);
+    execl(PROGRAM_FLUTTER_PATH, "flutter", "attach", (char*)NULL);
     perror("execl");
     _exit(1);
 }
