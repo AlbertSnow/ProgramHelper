@@ -1,18 +1,13 @@
 #include <stdio.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <string.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <poll.h>
-#include <stdio.h>
-#include <unistd.h>
 
-#define APP_PACKAGE_NAME "com.sankuai.meituan.meituanwaimaibusiness"
-#define APP_LAUNCH_ACTIVITY "com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity"
+const char * APP_PACKAGE_NAME = "com.sankuai.meituan.meituanwaimaibusiness";
+const char * APP_LAUNCH_ACTIVITY = "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity";
 
 /// return: can read fd, -1 mean error;
 int pollReadableFD(int* fdArray, int count, int timeout) {
@@ -76,7 +71,7 @@ void parseChildLog2RunProgram(char* buffer, int count) {
             printf("StopAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
             // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "force-stop", "com.sankuai.meituan.meituanwaimaibusiness", (char*)NULL);
             char* programName = "adb";
-            char* args[] = { programName, "shell", "am", "force-stop", APP_PACKAGE_NAME, NULL };
+            char* args[] = { programName, "shell", "am", "force-stop", (char *) APP_PACKAGE_NAME, NULL };
             execvp(programName, args);
             perror("execl");
             exit(1);
@@ -90,7 +85,7 @@ void parseChildLog2RunProgram(char* buffer, int count) {
             sleep(2);
             // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", (char*)NULL);
             char* programName = "adb";
-            char* args[] = { programName, "shell", "am", "start", (APP_PACKAGE_NAME + "/" + APP_LAUNCH_ACTIVITY), NULL };
+            char* args[] = { programName, "shell", "am", "start", (char *)APP_LAUNCH_ACTIVITY, NULL };
             execvp(programName, args);
             perror("execl");
             exit(1);
