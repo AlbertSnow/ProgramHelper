@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define TIMEOUT 6000000 // 100 minutes
-#define BUF_SIZE 512
+#define APP_PACKAGE_NAME "com.sankuai.meituan.meituanwaimaibusiness"
+#define APP_LAUNCH_ACTIVITY "com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity"
 
 /// return: can read fd, -1 mean error;
 int pollReadableFD(int* fdArray, int count, int timeout) {
@@ -43,7 +43,7 @@ void deliverParentInputToChild(int* childInputFD, char* buffer, int bufferCount)
             perror("read");
         }
     } else if (count != 0) {
-        printf("GET-------: %.*s \n", (int)count, buffer);
+        // printf("GET-------: %.*s \n", (int)count, buffer);
         write(childInputFD[1], buffer, count);
     }
 }
@@ -52,11 +52,11 @@ void deliverParentInputToChild(int* childInputFD, char* buffer, int bufferCount)
 /// parse child process (flutter) output, to execute new process
 void parseChildLog2RunProgram(char* buffer, int count) {
     if (strncmp("Target file", buffer, 11) == 0) {
-        printf("-------- Is not flutter project root directory ----- \n");
+        printf("-------- This is not the root directory of the flutter project. ----- \n");
     }
 
     if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
-        printf("-------- Start adb handle ----- \n");
+        printf("-------- Start adb program ----- \n");
 
         pid_t pid = fork();
         if (pid == 0)
@@ -76,7 +76,7 @@ void parseChildLog2RunProgram(char* buffer, int count) {
             printf("StopAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
             // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "force-stop", "com.sankuai.meituan.meituanwaimaibusiness", (char*)NULL);
             char* programName = "adb";
-            char* args[] = { programName, "shell", "am", "force-stop", "com.sankuai.meituan.meituanwaimaibusiness", NULL };
+            char* args[] = { programName, "shell", "am", "force-stop", APP_PACKAGE_NAME, NULL };
             execvp(programName, args);
             perror("execl");
             exit(1);
@@ -90,15 +90,13 @@ void parseChildLog2RunProgram(char* buffer, int count) {
             sleep(2);
             // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", (char*)NULL);
             char* programName = "adb";
-            char* args[] = { programName, "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", NULL };
+            char* args[] = { programName, "shell", "am", "start", (APP_PACKAGE_NAME + "/" + APP_LAUNCH_ACTIVITY), NULL };
             execvp(programName, args);
             perror("execl");
             exit(1);
         }
         wait(NULL);
         printf("AdbProcess: startApp finish \n");
-
-        printf("AdbProcess: end \n");
     }
 }
 
