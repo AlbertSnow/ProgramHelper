@@ -53,18 +53,18 @@ void parseChildLog2RunProgram(char* buffer, int count) {
     if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
         printf("-------- Start adb program ----- \n");
 
-        pid_t pid = fork();
-        if (pid == 0)
-        {
-            printf("AdbProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
-            // execl(PROGRAM_ADB_PATH, "adb", "devices", (char*)NULL);
-            char* programName = "adb";
-            char* args[] = { programName, "devices", NULL };
-            execvp(programName, args);
-            perror("execl");
-            exit(1);
-        }
-        wait(NULL);
+        // pid_t pid = fork();
+        // if (pid == 0)
+        // {
+        //     printf("AdbProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
+        //     // execl(PROGRAM_ADB_PATH, "adb", "devices", (char*)NULL);
+        //     char* programName = "adb";
+        //     char* args[] = { programName, "devices", NULL };
+        //     execvp(programName, args);
+        //     perror("execl");
+        //     exit(1);
+        // }
+        // wait(NULL);
 
         pid_t stopAppPid = fork();
         if (stopAppPid == 0) {
