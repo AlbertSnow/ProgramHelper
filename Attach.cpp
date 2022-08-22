@@ -36,29 +36,8 @@ int pollReadableFD(int* fdArray, int count, int timeout) {
     }
 }
 
-// int main(int argv, char** argc) {
-//     int fd;
-//     size_t bytes_read;
-//     char buffer[BUF_SIZE];
-
-//     fd = STDIN_FILENO;
-
-//     while (1) {
-    //     if (fd_can_read(fd, TIMEOUT)) {
-    //         printf("Can read\n");
-    //         bytes_read = read(fd, buffer, sizeof(buffer));
-
-    //         printf("Bytes read: %zu\n", bytes_read);
-    //     }
-    //     else {
-    //         printf("Can't read\n");
-    //     }
-    // }
-// }
-
-
-void deliverParentInputToChild(int* childInputFD, char* buffer) {
-    ssize_t count = read(STDIN_FILENO, buffer, sizeof(buffer));
+void deliverParentInputToChild(int* childInputFD, char* buffer, int bufferCount) {
+    ssize_t count = read(STDIN_FILENO, buffer, bufferCount);
     if (count == -1) {
         if (errno != EINTR) {
             perror("read");
@@ -134,8 +113,8 @@ void parseChildLogToInputChars(int* childInputFD, char* displayBuffer) {
 //  count: log length
 //  childInputFD: child Process input fd
 //  buffer: child process log output 
-void parseChildLog(int* childInputFD, int* childOutputFD, char* buffer) {
-    ssize_t count = read(childOutputFD[0], buffer, sizeof(buffer));
+void parseChildLog(int* childInputFD, int* childOutputFD, char* buffer, int readCount) {
+    ssize_t count = read(childOutputFD[0], buffer, readCount);
 
     if (count == -1) {
         if (errno == EINTR) {
@@ -177,9 +156,9 @@ void parentProcess(int* childInputFD, int* childOutputFD)
     {
         int fdIndex = pollReadableFD(pollFDs, count, infinitTimeout);
         if (fdIndex == 0) { // parent process input something
-            deliverParentInputToChild(childInputFD, buffer);
+            deliverParentInputToChild(childInputFD, buffer, sizeof(buffer));
         } else if (fdIndex == 1) { // child process output log
-            parseChildLog(childInputFD, childOutputFD, buffer);
+            parseChildLog(childInputFD, childOutputFD, buffer, sizeof(buffer));
         }
     }
     close(childOutputFD[0]);
