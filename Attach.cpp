@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <poll.h>
-#include "ConfigConstants.cpp"
+#include "ConfigConstants.h"
 
 // return: can read fd, -1 mean error;
 int pollReadableFD(int* fdArray, int count, int timeout) {
