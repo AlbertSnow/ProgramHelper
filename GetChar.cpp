@@ -10,13 +10,17 @@ int main() {
   // Set terminal to raw mode 
   system("stty raw"); 
 
-  // Wait for single character 
-  char input = getchar(); 
+  while(1) {
+    // Wait for single character
+    char input = getchar();
 
-  // Echo input:
-  cout << "--" << input << "--";
-
-  // Reset terminal to normal "cooked" mode 
+    // Echo input:
+    cout << "--" << input << "--";
+    if (input == 'q') {
+        break;
+    }
+  }
+  // Reset terminal to normal "cooked" mode
   system("stty cooked"); 
 
   // And we're out of here 
