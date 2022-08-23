@@ -5,9 +5,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <poll.h>
-
-const char * APP_PACKAGE_NAME = "com.sankuai.meituan.meituanwaimaibusiness";
-const char * APP_LAUNCH_ACTIVITY = "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity";
+#include "ConfigConstants.cpp"
 
 // return: can read fd, -1 mean error;
 int pollReadableFD(int* fdArray, int count, int timeout) {
@@ -70,7 +68,7 @@ void parseChildLog2RunProgram(char* buffer, int count) {
         pid_t stopAppPid = fork();
         if (stopAppPid == 0) {
             printf("StopAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
-            // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "force-stop", "com.sankuai.meituan.meituanwaimaibusiness", (char*)NULL);
+            // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "force-stop",  (char *) APP_PACKAGE_NAME, (char*)NULL);
             char* programName = "adb";
             char* args[] = { programName, "shell", "am", "force-stop", (char *) APP_PACKAGE_NAME, NULL };
             execvp(programName, args);
@@ -84,7 +82,7 @@ void parseChildLog2RunProgram(char* buffer, int count) {
         if (startAppPid == 0) {
             printf("StartAppProcess: I am child, pid=%d,ppid=%d\n", getpid(), getppid());
             sleep(2);
-            // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "start", "com.sankuai.meituan.meituanwaimaibusiness/com.sankuai.meituan.meituanwaimaibusiness.modules.main.MainActivity", (char*)NULL);
+            // execl(PROGRAM_ADB_PATH, "adb", "shell", "am", "start", (char *)APP_LAUNCH_ACTIVITY, (char*)NULL);
             char* programName = "adb";
             char* args[] = { programName, "shell", "am", "start", (char *)APP_LAUNCH_ACTIVITY, NULL };
             execvp(programName, args);
