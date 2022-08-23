@@ -7,6 +7,44 @@
 #include <poll.h>
 #include "ConfigConstants.h"
 
+#include <iostream> 
+using namespace std;  
+
+// get user input event not press enter key
+void deliverInput(int inputFD) {
+  cout << "++++++++++ User start handle ++++++++++" << endl;
+  cout << "++++++++++ input q will exit ++++++++++" << endl;
+
+  // Set terminal to raw mode 
+//   system("stty raw");
+
+  while (1) {
+    // Wait for single character
+    char input = getchar();
+    write(inputFD, &input, 1);
+    if (input == 'q') {
+        break;
+    }
+  }
+  // Reset terminal to normal "cooked" mode
+  system("stty cooked");
+  exit(1);
+}
+
+void startDeliverInputProcess(int inputFD) {
+  pid_t pid = fork();
+  if (pid == 0)
+  {
+    deliverInput(inputFD);
+  }
+}
+
+
+// third process handle user input to other child process (flutter)
+void onUserStartControll(int childInputFD) {
+    startDeliverInputProcess(childInputFD);
+}
+
 // return: can read fd, -1 mean error;
 int pollReadableFD(int* fdArray, int count, int timeout) {
     pollfd pollFDList[count];
@@ -99,6 +137,7 @@ void parseChildLogToInputChars(int* childInputPipeFDs, char* displayBuffer) {
     if (strncmp("The Flutter DevTools debugger and profiler on", displayBuffer, 25) == 0) {
         printf("Start input R \n");
         write(childInputPipeFDs[1], "R", 1);
+        onUserStartControll(childInputPipeFDs[1]);
     }
 }
 
@@ -120,10 +159,10 @@ void parseChildLog(int* childInputPipeFDs, int* childOutputPipeFDs, char* buffer
     else if (count != 0) {
         // printf("ParentProcessCatch: %.*s \n", (int)count, buffer);
         if (buffer[count - 1] == '\n') {
-            printf("%.*s", (int)count, buffer);
+            printf("%.*s  count: %d", (int)count, buffer, (int)count);
         }
         else {
-            printf("%.*s \n", (int)count, buffer);
+            printf("%.*s  count: %d\n", (int)count, buffer, (int)count);
         }
 
         parseChildLog2RunProgram(buffer, count);
@@ -148,12 +187,14 @@ void parentProcess(int* childInputPipeFDs, int* childOutputPipeFDs)
     char buffer[4096];
     while (1)
     {
-        int fdIndex = pollReadableFD(pollFDs, count, infinitTimeout);
-        if (fdIndex == 0) { // parent process input something
-            deliverParentInputToChild(childInputPipeFDs, buffer, sizeof(buffer));
-        } else if (fdIndex == 1) { // child process output log
-            parseChildLog(childInputPipeFDs, childOutputPipeFDs, buffer, sizeof(buffer));
-        }
+        parseChildLog(childInputPipeFDs, childOutputPipeFDs, buffer, sizeof(buffer));
+
+        // int fdIndex = pollReadableFD(pollFDs, count, infinitTimeout);
+        // if (fdIndex == 0) { // parent process input something
+        //     deliverParentInputToChild(childInputPipeFDs, buffer, sizeof(buffer));
+        // } else if (fdIndex == 1) { // child process output log
+        //     parseChildLog(childInputPipeFDs, childOutputPipeFDs, buffer, sizeof(buffer));
+        // }
     }
     close(childOutputPipeFDs[0]);
     wait(0);
