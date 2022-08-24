@@ -12,11 +12,11 @@ using namespace std;
 
 // get user input event not press enter key
 void deliverInput(int inputFD) {
-  cout << "++++++++++ User start handle ++++++++++" << endl;
-  cout << "++++++++++ input q will exit ++++++++++" << endl;
+//   cout << "++++++++++ User start handle ++++++++++" << endl;
+  cout << "++++++++++ input q to exit program++++++++++" << endl;
 
   // Set terminal to raw mode 
-//   system("stty raw");
+  system("stty raw");
 
   while (1) {
     // Wait for single character
@@ -128,7 +128,7 @@ void parseChildLog2RunProgram(char* buffer, int count) {
             exit(1);
         }
         wait(NULL);
-        printf("AdbProcess: startApp finish \n");
+        printf("adb program finish \n");
     }
 }
 
@@ -159,10 +159,10 @@ void parseChildLog(int* childInputPipeFDs, int* childOutputPipeFDs, char* buffer
     else if (count != 0) {
         // printf("ParentProcessCatch: %.*s \n", (int)count, buffer);
         if (buffer[count - 1] == '\n') {
-            printf("%.*s  count: %d", (int)count, buffer, (int)count);
+            printf("%.*s", (int)count, buffer);
         }
         else {
-            printf("%.*s  count: %d\n", (int)count, buffer, (int)count);
+            printf("%.*s\r\n", (int)count, buffer);
         }
 
         parseChildLog2RunProgram(buffer, count);

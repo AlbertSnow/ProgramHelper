@@ -8,7 +8,14 @@ int main() {
   cout << "Press any key to continue..." << endl; 
 
   // Set terminal to raw mode 
-  system("stty raw"); 
+  system("stty raw");
+
+  cout << "--" << 'h' << "\r\n--";
+  cout << "--" << 'e' << "\r\n--";
+  cout << "--" << 'l' << "\r\n--";
+  cout << "--" << 'l' << "\r\n--";
+  cout << "--" << 'o' << "--";
+
 
   while(1) {
     // Wait for single character
