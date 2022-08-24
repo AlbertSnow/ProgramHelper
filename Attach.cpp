@@ -13,7 +13,7 @@ using namespace std;
 // Read user input, though not press enter key;
 void deliverInput(int inputFD) {
 //   cout << "++++++++++ User start handle ++++++++++" << endl;
-  cout << "++++++++++ input q to exit ++++++++++" << endl;
+  cout << "++++++++++ 输入 q 退出交互程序 ++++++++++" << endl;
 
   // Set terminal to raw mode 
   system("stty raw");
