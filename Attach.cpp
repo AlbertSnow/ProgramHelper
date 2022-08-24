@@ -23,6 +23,7 @@ void deliverInput(int inputFD) {
     char input = getchar();
     write(inputFD, &input, 1);
     if (input == 'q' || input == 'Q') {
+        cout << "++++++++++ 输入 Ctrl+C 后将完全退出程序 ++++++++++" << endl;
         break;
     }
   }
@@ -129,7 +130,8 @@ void parseChildLog2RunProgram(char* buffer, int count) {
             exit(1);
         }
         wait(NULL);
-        printf("-------- Finish adb program -------- \n");
+        printf("-------- Finish adb program -------- \n\n");
+        printf("-------- 第一次Sync会比较耗时，请耐心等待 -------- \n");
     }
 }
 
