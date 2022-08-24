@@ -10,10 +10,10 @@
 #include <iostream> 
 using namespace std;  
 
-// get user input event not press enter key
+// Read user input, though not press enter key;
 void deliverInput(int inputFD) {
 //   cout << "++++++++++ User start handle ++++++++++" << endl;
-  cout << "++++++++++ input q to exit program++++++++++" << endl;
+  cout << "++++++++++ input q to exit ++++++++++" << endl;
 
   // Set terminal to raw mode 
   system("stty raw");
@@ -22,7 +22,7 @@ void deliverInput(int inputFD) {
     // Wait for single character
     char input = getchar();
     write(inputFD, &input, 1);
-    if (input == 'q') {
+    if (input == 'q' || input == 'Q') {
         break;
     }
   }
@@ -31,6 +31,8 @@ void deliverInput(int inputFD) {
   exit(1);
 }
 
+// start new process to handle user input
+// redirect to flutter process as standard input
 void startDeliverInputProcess(int inputFD) {
   pid_t pid = fork();
   if (pid == 0)
@@ -84,11 +86,11 @@ void deliverParentInputToChild(int* childInputPipeFDs, char* buffer, int bufferC
 // parse child process (flutter) output, to execute new process
 void parseChildLog2RunProgram(char* buffer, int count) {
     if (strncmp("Target file", buffer, 11) == 0) {
-        printf("-------- This is not the root directory of the flutter project. ----- \n");
+        printf("-------- This is not the root directory of the flutter project. -------- \n");
     }
 
     if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
-        printf("-------- Start adb program ----- \n");
+        printf("\n-------- Start adb program -------- \n");
 
         // pid_t pid = fork();
         // if (pid == 0)
@@ -114,7 +116,6 @@ void parseChildLog2RunProgram(char* buffer, int count) {
             exit(1);
         }
         wait(NULL);
-        printf("AdbProcess: stopApp finish \n");
 
         pid_t startAppPid = fork();
         if (startAppPid == 0) {
@@ -128,7 +129,7 @@ void parseChildLog2RunProgram(char* buffer, int count) {
             exit(1);
         }
         wait(NULL);
-        printf("adb program finish \n");
+        printf("-------- Finish adb program -------- \n");
     }
 }
 
@@ -159,7 +160,7 @@ void parseChildLog(int* childInputPipeFDs, int* childOutputPipeFDs, char* buffer
     else if (count != 0) {
         // printf("ParentProcessCatch: %.*s \n", (int)count, buffer);
         if (buffer[count - 1] == '\n') {
-            printf("%.*s", (int)count, buffer);
+            printf("%.*s\r\n", (int)(count-1), buffer);
         }
         else {
             printf("%.*s\r\n", (int)count, buffer);
@@ -207,7 +208,7 @@ void childProcess(int* childInputPipeFDs, int* childOutputPipeFDs) {
     // Close the exit from the pipe within the child process
     close(childInputPipeFDs[1]);
     close(childOutputPipeFDs[0]);
-    printf("Child Process, pid=%d,ppid=%d\n", getpid(), getppid());
+    printf("Child Process, pid=%d,ppid=%d\n\n", getpid(), getppid());
 
     while ((dup2(childInputPipeFDs[0], STDIN_FILENO) == -1) && (errno == EINTR))
     {
