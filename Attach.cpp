@@ -23,7 +23,6 @@ void deliverInput(int inputFD) {
     char input = getchar();
     write(inputFD, &input, 1);
     if (input == 'q' || input == 'Q') {
-        cout << "++++++++++ 输入 Ctrl+C 后将完全退出程序 ++++++++++" << endl;
         break;
     }
   }
@@ -88,9 +87,9 @@ void deliverParentInputToChild(int* childInputPipeFDs, char* buffer, int bufferC
 void parseChildLog2RunProgram(char* buffer, int count) {
     if (strncmp("Target file", buffer, 11) == 0) {
         printf("-------- This is not the root directory of the flutter project. -------- \n");
-    }
-
-    if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
+    } else if (strncmp("Application finished.", buffer, 15) == 0) {
+        printf("++++++++++ 输入 Ctrl+C 后将完全退出程序 ++++++++++ \n");
+    } else if (strncmp("Waiting for a connection from", buffer, 25) == 0) {
         printf("\n-------- Start adb program -------- \n");
 
         // pid_t pid = fork();
